@@ -3,6 +3,14 @@ let
   kernelConfig = import ./config.nix;
 in {
   nixpkgs.overlays = [( self: super: {
+    firmwareLinuxNonfree = with super; firmwareLinuxNonfree.overrideAttrs(old: rec {
+      src = fetchgit {
+        url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git";
+        rev = "397a604e081fa4a7a65f31b75494f80f1e1d9e09";
+        sha256 = "11p5z1jpb1nrw2i7aj6310ahs0r88xyvsp0pz62s5hrzxawv2hda";
+      }; 
+    });
+
     linux_testing_plumelo = super.callPackage <nixos/pkgs/os-specific/linux/kernel/linux-testing.nix> {
       kernelPatches = with super; [ 
         kernelPatches.bridge_stp_helper 
@@ -36,6 +44,7 @@ in {
     linux_testing_gag3wifi = with kernelConfig; self.linux_testing_plumelo.override({
       ignoreConfigErrors= true;
       extraConfig =''
+        KALLSYMS_ALL y
         CPU_SUP_CENTAUR n
         MK8 n
         MPSC n
@@ -44,11 +53,10 @@ in {
         DRM_NOUVEAU n 
         DRM_I915 n 
         DRM_RADEON n
-        DRM_AMDGPU_SI y
-        DRM_AMDGPU_CIK y
-        DRM_AMD_DC_PRE_VEGA y
-        NR_CPUS 16 
+        NR_CPUS 4 
         BT n  
+        DRM_AMD_DC y
+        DRM_AMD_DC_DCN1_0 y
         ${exclude.uncommon}
         ${exclude.fs}
         ${exclude.net}
